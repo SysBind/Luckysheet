@@ -48,7 +48,8 @@
   },
   "scripts": {
     "build": "cross-env NODE_ENV=production gulp build",
-    "build-no-minify": "cross-env NODE_ENV=build-no-minify gulp build",      
+    "build-no-minify": "cross-env NODE_ENV=build-no-minify gulp build",
+    "build-esm": "cross-env NODE_ENV=production gulp esm-only",
     "dev": "cross-env NODE_ENV=development gulp dev",
     "docs:dev": "vuepress dev docs",
     "docs:build": "vuepress build docs",

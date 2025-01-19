@@ -188,30 +188,29 @@ async function core_rollup() {
             // 	extract: true,
             // 	// minimize: isProductionEnv,
             // }),
-            production && terser(), // minify, but only in production
+            // minify, but only in production
             babel(babelConfig)
         ],
     });
 
-    bundle.write({
+   await bundle.write({
         file: 'dist/luckysheet.umd.js',
         format: 'umd',
-        name: 'luckysheet',
         sourcemap: true,
         inlineDynamicImports:true,
-        banner: banner
+        banner: banner,
+        name: 'luckysheet'
     });
 
-    if(production){
-        bundle.write({
+
+       await bundle.write({
             file: 'dist/luckysheet.esm.js',
             format: 'esm',
-            name: 'luckysheet',
             sourcemap: true,
             inlineDynamicImports:true,
             banner: banner
         });
-    }
+
 
 }
 
@@ -295,8 +294,10 @@ function copyStaticCssImages(){
 }
 
 const dev = series(clean, parallel(pluginsCss, plugins, css, pluginsJs, copyStaticHtml, copyStaticFonts, copyStaticAssets, copyStaticImages, copyStaticExpendPlugins, copyStaticDemoData, copyStaticCssImages, core), watcher, serve);
-const build = series(clean, parallel(pluginsCss, plugins, css, pluginsJs, copyStaticHtml, copyStaticFonts, copyStaticAssets, copyStaticImages, copyStaticExpendPlugins, copyStaticDemoData, copyStaticCssImages, core));
+const build = series(clean, parallel(pluginsCss, plugins, css, pluginsJs, copyStaticHtml, copyStaticFonts, copyStaticAssets, copyStaticImages, copyStaticExpendPlugins, copyStaticDemoData, copyStaticCssImages, core, core_rollup));
+const esm = series(clean, core_rollup);
 
+gulp.task('esm-only', esm);
 exports.dev = dev;
 exports.build = build;
 exports.default = dev;
