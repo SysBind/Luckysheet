@@ -12,6 +12,9 @@ const terser = require('rollup-plugin-terser').terser;
 const babel = require('@rollup/plugin-babel').default;
 // Dynamic module name based on plugin structure
 const path = require('path'); // Ensure the 'path' module is imported
+const rename = require('gulp-rename');
+const replace = require('gulp-replace');
+const fs = require('fs');
 
 const production = process.env.NODE_ENV === 'production'; // Check for prod environment
 
@@ -25,10 +28,13 @@ const pluginName = 'sysbindlib';
 const subModule = 'luckysheet'; // Subdirectory under sysbindlib
 // Paths
 const paths = {
+    cssImages: 'src/css/**/*.{jpg,jpeg,png,gif,svg}',
+    pluginImages: 'src/plugins/images/**/*.{jpg,jpeg,png,gif,svg}', // Images within plugins directory
     mainJs: 'src/index.js', // Main source input file
     assets: 'src/assets/**/*', // Additional static assets (if applicable)
     moodleSrc: `${pluginType}/${pluginName}/amd/src`, // Moodle AMD src output directory
-    outputFile: `${subModule}.js` // File name for the Moodle AMD module
+    outputFile: `${subModule}.js`, // File name for the Moodle AMD module
+    moodlePlugin: `${pluginType}/${pluginName}`
 };
 // Strip the file extension from outputFile
 const outputFileName = path.basename(paths.outputFile, path.extname(paths.outputFile));
@@ -111,8 +117,73 @@ function watcher() {
     watch(paths.assets, copyAssets); // Watch asset changes
 }
 
+// Paths for CSS input and SCSS output
+const scssPaths = {
+    cssSrc: 'src/css/**/*.css', // Source directory for CSS files
+    scssOutput: `${paths.moodlePlugin}/scss/${subModule}` // Target directory for SCSS files
+};
+// Reusable variables to extract from CSS
+const scssVariables = {
+    colorPrimary: '#007BFF',
+    colorSecondary: '#6C757D',
+    fontSizeBase: '16px',
+    borderRadius: '4px'
+};
+
+// Task to convert and optimize CSS files into SCSS format
+function cssToOptimizedScss() {
+    return gulp.src(scssPaths.cssSrc)
+      // Rename file extensions to .scss
+      .pipe(rename({ extname: '.scss' }))
+
+      // Replace hardcoded styles with SCSS variables
+      .pipe(replace(/#007BFF/g, '$color-primary'))
+      .pipe(replace(/#6C757D/g, '$color-secondary'))
+      .pipe(replace(/16px/g, '$font-size-base'))
+      .pipe(replace(/4px/g, '$border-radius'))
+
+      // Attempt to group SCSS-friendly rules into nested styles
+      .pipe(replace(/([a-z0-9\-\_\#\.\:\[\]\=\"]+\s?\{)/g, '\n$1')) // Add spacing for readability
+
+      // Add SCSS variables at the top of each file
+      .pipe(replace(/^/, () => {
+          const variables = Object.entries(scssVariables)
+            .map(([key, value]) => `$${key}: ${value};`)
+            .join('\n');
+          return `${variables}\n\n`;
+      }))
+
+      // Output the new SCSS files to the target directory
+      .pipe(gulp.dest(scssPaths.scssOutput));
+}
+
+function copyCssImagesToMoodlePix() {
+    // Destination directory dynamically uses the Moodle plugin and submodule paths
+    const destPath = path.join(paths.moodlePlugin, 'pix', subModule);
+
+    return gulp.src(paths.cssImages) // Match all image files in src/css
+      .pipe(gulp.dest(destPath)); // Copy to Moodle pix/subModule directory
+}
+
+function copyPluginImagesToMoodlePix() {
+    const pluginImageDestPath = path.join(paths.moodlePlugin, 'pix', subModule, 'plugins', 'images');
+
+    return gulp.src(paths.pluginImages) // Match all images in src/plugins/images
+      .pipe(gulp.dest(pluginImageDestPath)); // Copy to Moodle pix/plugins/images directory
+}
+
+
+// Export task for CLI usage
+exports.copyCssImagesToMoodlePix = copyCssImagesToMoodlePix;
+
+exports.copyPluginImagesToMoodlePix = copyPluginImagesToMoodlePix;
+
+// Export the task for running via CLI
+exports.cssToOptimizedScss = cssToOptimizedScss;
+
+
 // Build Task
-const build = series(clean, parallel(moodleCoreBuild, copyAssets));
+const build = series(clean, parallel(moodleCoreBuild, copyAssets, cssToOptimizedScss, copyCssImagesToMoodlePix, copyPluginImagesToMoodlePix));
 
 // Export tasks for CLI usage
 exports.clean = clean;
