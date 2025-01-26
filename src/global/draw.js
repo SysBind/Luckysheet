@@ -1420,26 +1420,26 @@ let cellRender = function(
     let cellWidth = end_c - start_c - 2;
     let cellHeight = end_r - start_r - 2;
     let space_width = 2,
-        space_height = 2; //宽高方向 间隙
+        space_height = 2; // Gap in width and height direction
 
-    //水平对齐
+    //Horizontal alignment
     let horizonAlign = menuButton.checkstatus(Store.flowdata, r, c, "ht");
-    //垂直对齐
+    // Vertical alignment
     let verticalAlign = menuButton.checkstatus(Store.flowdata, r, c, "vt");
 
-    //交替颜色
+    // 交替颜色
     let checksAF = alternateformat.checksAF(r, c, af_compute);
     //条件格式
     let checksCF = conditionformat.checksCF(r, c, cf_compute);
 
-    //单元格 背景颜色
+    //Cell background color
     let fillStyle = menuButton.checkstatus(Store.flowdata, r, c, "bg");
     if (checksAF != null && checksAF[1] != null) {
-        //若单元格有交替颜色 背景颜色
+        // If the cell has alternating colors background color
         fillStyle = checksAF[1];
     }
     if (checksCF != null && checksCF["cellColor"] != null) {
-        //若单元格有条件格式 背景颜色
+        //If the cell has conditional formatting background color
         fillStyle = checksCF["cellColor"];
     }
     // luckysheetTableContent.textBaseline = 'top';
@@ -1451,8 +1451,9 @@ let cellRender = function(
 
     let borderfix = menuButton.borderfix(Store.flowdata, r, c);
 
-    // 这里计算canvas需要绘制的矩形范围时,需要留下原本单元格边框的位置
-    // 让 fillRect 绘制矩形的起始xy坐标增加1,绘制长宽减少1
+    // When calculating the rectangular area to be drawn on the canvas,
+// leave room for the original cell border.
+// Increase the x and y coordinates for fillRect by 1, and decrease the width and height by 1.
 
     let cellsize = [
         start_c + offsetLeft + borderfix[0] + 1,
@@ -1461,7 +1462,7 @@ let cellRender = function(
         end_r - start_r + borderfix[3] + 1,
     ];
 
-    //单元格渲染前，考虑到合并单元格会再次渲染一遍，统一放到这里
+    // Before rendering the cell, considering that the merged cell will be rendered again, unify it here
     if (
         !method.createHookFunction(
             "cellRenderBefore",
@@ -1490,7 +1491,7 @@ let cellRender = function(
         dataVerification[r + "_" + c] != null &&
         !dataVerificationCtrl.validateCellData(value, dataVerification[r + "_" + c])
     ) {
-        //单元格左上角红色小三角标示
+        //Cell top-left corner red small triangle indicator
         let dv_w = 5 * Store.zoomRatio,
             dv_h = 5 * Store.zoomRatio; //红色小三角宽高
 
@@ -1503,7 +1504,7 @@ let cellRender = function(
         luckysheetTableContent.closePath();
     }
 
-    //若单元格有批注（单元格右上角红色小三角标示）
+    //If the cell has a comment (small red triangle indicator in the top right corner of the cell)
     if (cell.ps != null) {
         let ps_w = 8 * Store.zoomRatio,
             ps_h = 8 * Store.zoomRatio; //红色小三角宽高
@@ -1866,7 +1867,7 @@ let cellRender = function(
     );
 };
 
-//溢出单元格渲染
+// 溢出单元格渲染
 let cellOverflowRender = function(
     r,
     c,
@@ -1880,7 +1881,7 @@ let cellOverflowRender = function(
     af_compute,
     cf_compute,
 ) {
-    //溢出单元格 起止行列坐标
+    // Overflow cell start and end row and column coordinates
     let start_r;
     if (r == 0) {
         start_r = -scrollHeight - 1;
@@ -1927,19 +1928,19 @@ let cellOverflowRender = function(
         c: c,
     });
 
-    //交替颜色
+    //Alternate Colors
     let checksAF = alternateformat.checksAF(r, c, af_compute);
-    //条件格式
+    //Conditional Formatting
     let checksCF = conditionformat.checksCF(r, c, cf_compute);
 
-    //单元格 文本颜色
+    // Cell text color
     luckysheetTableContent.fillStyle = menuButton.checkstatus(Store.flowdata, r, c, "fc");
 
-    //若单元格有交替颜色 文本颜色
+    //If the cell has alternate colors, update text color
     if (checksAF != null && checksAF[0] != null) {
         luckysheetTableContent.fillStyle = checksAF[0];
     }
-    //若单元格有条件格式 文本颜色
+    //If the cell has conditional formatting, update the text color
     if (checksCF != null && checksCF["textColor"] != null) {
         luckysheetTableContent.fillStyle = checksCF["textColor"];
     }
@@ -1952,7 +1953,7 @@ let cellOverflowRender = function(
     luckysheetTableContent.restore();
 };
 
-//获取表格渲染范围 溢出单元格
+// Get table rendering range for overflow cells
 function getCellOverflowMap(canvas, col_st, col_ed, row_st, row_end) {
     let map = {};
 
@@ -2167,8 +2168,8 @@ function cellOverflow_trace(r, curC, traceC, traceDir, horizonAlign, textMetrics
 }
 
 function cellOverflow_colIn(map, r, c, col_st, col_ed) {
-    let colIn = false, //此单元格 是否在 某个溢出单元格的渲染范围
-        colLast = false, //此单元格 是否是 某个溢出单元格的渲染范围的最后一列
+    let colIn = false, //This cell - Whether within the rendering range of an overflow cell
+        colLast = false, //This cell - Whether within the rendering range of an overflow cell's last column
         rowIndex, //溢出单元格 行下标
         colIndex, //溢出单元格 列下标
         stc,
@@ -2255,7 +2256,7 @@ function cellTextRender(textInfo, ctx, option) {
             ctx.font = word.style;
         }
 
-        // 暂时未排查到word.content第一次会是object，先做下判断来渲染，后续找到问题再复原
+        // Temporarily adding a check to render the word.content if it is an object during the first pass; will revert it once the issue is identified
         let txt = typeof word.content === "object" ? word.content.m : word.content;
         ctx.fillText(txt, (pos_x + word.left) / Store.zoomRatio, (pos_y + word.top) / Store.zoomRatio);
 

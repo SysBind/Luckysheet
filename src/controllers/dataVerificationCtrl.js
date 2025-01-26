@@ -851,12 +851,12 @@ const dataVerificationCtrl = {
     dataAllocation: function(){
         let _this = this;
 
-        //单元格范围
+        // Cell Range
         let range = Store.luckysheet_select_save[Store.luckysheet_select_save.length - 1];
         let rangeTxt = getRangetxt(Store.currentSheetIndex, range, Store.currentSheetIndex);
         $("#luckysheet-dataVerification-dialog #data-verification-range input").val(rangeTxt);
 
-        //focus单元格
+        //focus
         let rowIndex = range.row_focus || range.row[0];
         let colIndex = range.column_focus || range.column[0];
         let dataVerification = $.extend(true, {}, _this.dataVerification); 
@@ -867,8 +867,8 @@ const dataVerificationCtrl = {
         }
 
         _this.curItem = item;
-        
-        //验证条件
+
+        // Validation conditions
         $("#luckysheet-dataVerification-dialog #data-verification-type-select").val(item.type);
         $("#luckysheet-dataVerification-dialog .show-box .show-box-item").hide();
 
@@ -937,13 +937,38 @@ const dataVerificationCtrl = {
             $("#luckysheet-dataVerification-dialog #data-verification-validity-select").val(item.type2);
         }
 
-        //自动远程获取选项
+        //Automatically fetch options remotely
         $("#luckysheet-dataVerification-dialog #data-verification-remote").prop("checked", item.remote);
 
-        //输入数据无效时禁止输入
+        //Prohibit input when data is invalid
         $("#luckysheet-dataVerification-dialog #data-verification-prohibitInput").prop("checked", item.prohibitInput);
 
-        //选中单元格时显示提示语
+        checkboxChange: function(r, c) {
+            let _this = this;
+
+            let historyDataVerification = $.extend(true, {}, _this.dataVerification);
+            let currentDataVerification = $.extend(true, {}, _this.dataVerification);
+
+            let item = currentDataVerification[r + "_" + c];
+            item.checked = !item.checked;
+
+            let value = item.value2;
+            if (item.checked) {
+                value = item.value1;
+            }
+
+            let d = editor.deepCopyFlowData(Store.flowdata);
+            setcellvalue(r, c, d, value);
+
+            // Update checkbox state and related data
+            _this.refOfCheckbox(
+              historyDataVerification,
+              currentDataVerification,
+              Store.currentSheetIndex,
+              d,
+              { "row": [r, r], "column": [c, c] },
+            );
+        }
         $("#luckysheet-dataVerification-dialog #data-verification-hint-show").prop("checked", item.hintShow);
         
         if(item.hintShow){

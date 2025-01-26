@@ -24,17 +24,19 @@ export function luckysheetupdateCell(row_index1, col_index1, d, cover, isnotfocu
         return;
     }
 
-    if(isEditMode() || Store.allowEdit===false){//此模式下禁用单元格编辑
+    if(isEditMode() || Store.allowEdit===false){// Cell editing is disabled in this mode
         return;
     }
 
-    // 钩子函数
+    // Hook function
     if(!method.createHookFunction('cellEditBefore',Store.luckysheet_select_save)){return;}
 
-    // 编辑单元格时发送指令到后台，通知其他单元格更新为“正在输入”状态
+    // When editing a cell, send an instruction to the backend to notify other cells to update to the "editing" state
     server.saveParam("mv", Store.currentSheetIndex,  {op:"enterEdit",range:Store.luckysheet_select_save});
 
-    //数据验证
+    if (!isNotFocus) {
+      $("#luckysheet-rich-text-editor").focus().select();
+    }
     if(dataVerificationCtrl.dataVerification != null && dataVerificationCtrl.dataVerification[row_index1 + '_' + col_index1] != null){
         let dataVerificationItem = dataVerificationCtrl.dataVerification[row_index1 + '_' + col_index1];
         if(dataVerificationItem.type == 'dropdown'){
